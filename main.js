@@ -73,6 +73,12 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
     { key: 'screw_psh', label: 'Саморезы ПШ' }
   ];
 
+  function visibleBomItems(finalAgg){
+    const items = BOM_ITEMS.filter(it => (finalAgg?.[it.key]?.length));
+    return items.length ? items : BOM_ITEMS;
+  }
+
+
   const jHeights = [
     0.48,0.58,0.67,0.77,0.86,0.96,1.05,1.15,1.24,1.34,
     1.43,1.53,1.62,1.72,1.81,1.91,2.00,2.10,2.19,2.29,
@@ -141,21 +147,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             <label>Расстояние между столбов (м) <span class="hint">(от 0,5 до 3 м)</span></label>
             <input class="j_span" type="number" min="0.5" max="3" step="0.01">
           </div>
-
-          <div class="field">
-            <label>Количество углов 90°</label>
-            <input class="j_corners" type="number" min="0" step="1">
-          </div>
-
-          <div class="field">
-            <label>Кирпичные/Бетонные столбы</label>
-            <select class="j_brick">
-              <option value="">— выберите —</option>
-              <option value="no">Нет</option>
-              <option value="yes">Да</option>
-            </select>
-          </div>
-        </div>
+</div>
 
         <div class="col">
           <div class="field">
@@ -237,20 +229,21 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   }
 
   function renderBOMTable(agg){
-    const cols1 = BOM_ITEMS.map(it => {
+    const ITEMS = visibleBomItems(agg);
+    const cols1 = ITEMS.map(it => {
       const title = esc(it.label).replaceAll('\n','<br>');
       return `<th colspan="2">${title}</th>`;
     }).join('');
 
-    const cols2 = BOM_ITEMS.map(() =>
+    const cols2 = ITEMS.map(() =>
       `<th class="subhead">Размер, м</th><th class="subhead">Кол-во, шт</th>`
     ).join('');
 
-    const maxRows = Math.max(1, ...BOM_ITEMS.map(it => (agg[it.key]?.length || 0)));
+    const maxRows = Math.max(1, ...ITEMS.map(it => (agg[it.key]?.length || 0)));
 
     let body = '';
     for (let r = 0; r < maxRows; r++){
-      const tds = BOM_ITEMS.map(it => {
+      const tds = ITEMS.map(it => {
         const rec = agg[it.key]?.[r];
         const size = rec ? rec.size : '—';
         const qty  = rec ? rec.qty  : '—';
@@ -279,12 +272,9 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       const name = sec.querySelector('.j_name')?.value || '';
       const height = Number((sec.querySelector('.j_height')?.value || '').replace(',', '.'));
       const span = Number(sec.querySelector('.j_span')?.value);
-      const sectionsQty = Number(sec.querySelector('.j_sections')?.value);
-      const corners = Number(sec.querySelector('.j_corners')?.value);
-      const brick = sec.querySelector('.j_brick')?.value || '';
-      const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
+      const sectionsQty = Number(sec.querySelector('.j_sections')?.value);      const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
-      return { name, height, span, sectionsQty, corners, brick, pipe, depth };
+      return { name, height, span, sectionsQty, pipe, depth };
     });
   }
 
@@ -371,10 +361,7 @@ function sizeBySpan(span){
       if (!s.name) { jErr.textContent = `Секция ${idx}: выберите наименование`; return; }
       if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `Секция ${idx}: выберите высоту`; return; }
       if (!isFinite(s.span) || s.span < 0.5 || s.span > 3) { jErr.textContent = `Секция ${idx}: расстояние между столбов 0,5–3 м`; return; }
-      if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }
-      if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
-      if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
-      if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
+      if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }      if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
       if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
     }
 
@@ -431,12 +418,13 @@ lastFinalAgg = finalAgg;
 jPdfBtn.classList.remove('hidden');
   }
 function buildBomRows(finalAgg){
-  const maxRows = Math.max(1, ...BOM_ITEMS.map(it => (finalAgg[it.key]?.length || 0)));
+  const ITEMS = visibleBomItems(finalAgg);
+  const maxRows = Math.max(1, ...ITEMS.map(it => (finalAgg[it.key]?.length || 0)));
 
   const rows = [];
   for (let r = 0; r < maxRows; r++){
     const row = [];
-    BOM_ITEMS.forEach(it => {
+    ITEMS.forEach(it => {
       const rec = finalAgg[it.key]?.[r];
       row.push(rec ? String(rec.size).replace('.', ',') : '—');
       row.push(rec ? String(Math.round(rec.qty)) : '—');
@@ -479,19 +467,14 @@ function downloadJaluziPdf(){
 
   // ===== Таблица введённых данных по секциям =====
   const secHead = [[
-    'Секция', 'Наименование', 'Высота, м', 'Расст. между, м', 'Секций, шт', 'Углы 90°, шт',
-    'Кирп/бетон', 'Проф труба', 'Заглубление, м'
-  ]];
+    'Секция', 'Наименование', 'Высота, м', 'Расст. между, м', 'Секций, шт', 'Проф труба', 'Заглубление, м']];
 
   const secBody = lastSectionsData.map((s, i) => ([
     String(i + 1),
     s.name === 'jaluzi' ? 'Жалюзи' : (s.name === 'fermer' ? 'Фермер' : s.name),
     String(s.height).replace('.', ','),
     String(s.span).replace('.', ','),
-    String(s.sectionsQty),
-    String(s.corners),
-    s.brick === 'yes' ? 'Да' : 'Нет',
-    s.pipe === 'none' ? 'нет' : (s.pipe === '60x60' ? '60×60' : (s.pipe === '80x80' ? '80×80' : s.pipe)),
+    String(s.sectionsQty),    s.pipe === 'none' ? 'нет' : (s.pipe === '60x60' ? '60×60' : (s.pipe === '80x80' ? '80×80' : s.pipe)),
     String(s.depth).replace('.', ',')
   ]));
 
@@ -532,14 +515,15 @@ function downloadJaluziPdf(){
   let y = doc.lastAutoTable.finalY + 8;
 
   // ===== Таблица расчёта (колонка-группами) =====
-  const head1 = BOM_ITEMS.map(it => ({
+  const ITEMS = visibleBomItems(lastFinalAgg);
+  const head1 = ITEMS.map(it => ({
     content: it.label.replace('\n', ' '),
     colSpan: 2,
     styles: { halign: 'center' }
   }));
 
   const head2 = [];
-  BOM_ITEMS.forEach(() => {
+  ITEMS.forEach(() => {
     head2.push('Размер, м');
     head2.push('Кол-во, шт');
   });
