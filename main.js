@@ -120,16 +120,14 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             <label>Наименование забора</label>
             <select class="j_name">
               <option value="">— выберите —</option>
-              <option value="jaluzi">Жалюзи 135/110</option>
-              <option value="fermer">Фермер 120/145</option>
+              <option value="jaluzi">Жалюзи</option>
+              <option value="fermer">Фермер</option>
             </select>
           </div>
 
           <div class="field">
             <label>Высота забора (м)</label>
-            <select class="j_height" disabled>
-              ${optionsHTML(jHeights, '— выберите высоту —')}
-            </select>
+            <input class="j_height" type="number" min="0" step="0.01" disabled>
           </div>
 
           <div class="field">
@@ -385,7 +383,8 @@ function sizeBySpan(span){
     data.forEach(s => {
       // Ламели
       const lamelSize = roundToCmMeters(s.span - 0.01);
-      const lamelQty = Math.floor(s.height / 0.095 * s.sectionsQty);
+      const workMm = (s.name === 'fermer') ? 145 : 110; // рабочая ширина ламели (мм)
+      const lamelQty = Math.ceil((s.height * 1000) / workMm) * s.sectionsQty;
       addAgg(agg, 'lamel', lamelSize, lamelQty);
 
       // Стойка
@@ -506,7 +505,7 @@ function downloadJaluziPdf(){
 
   const secBody = lastSectionsData.map((s, i) => ([
     String(i + 1),
-    s.name === 'jaluzi' ? 'Жалюзи 135/110' : (s.name === 'fermer' ? 'Фермер 120/145' : s.name),
+    s.name === 'jaluzi' ? 'Жалюзи' : (s.name === 'fermer' ? 'Фермер' : s.name),
     String(s.height).replace('.', ','),
     String(s.span).replace('.', ','),
     String(s.sectionsQty),
