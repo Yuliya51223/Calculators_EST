@@ -422,7 +422,7 @@ function sizeBySpan(span){
       // Саморезы ПШ (упрощённо, чтобы расчёт был стабильным)
       const screwPSHQty = (lamelQty * 4) + (kryshkaQty * 8);
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
-    });    });
+    });
 
     const finalAgg = finalizeAgg(agg);
     renderBOMTable(finalAgg);
