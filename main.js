@@ -62,15 +62,15 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
 
   const BOM_ITEMS = [
     { key: 'lamel', label: 'Ламель' },
-    { key: 'stoyka', label: 'Стойка' },
-    { key: 'krepezh', label: 'Крепежная планка' },
-    { key: 'kryshka', label: 'Крышка' },
-    { key: 'dekor', label: 'Декоративная\nнакладка' },
-    { key: 'dekor_ugol', label: 'Декоративная\nнакладка угловая' },
-    { key: 'finish', label: 'Планка завершающая' },
+    { key: 'lamel_main', label: 'Ламель основная' },
+    { key: 'lamel_inner', label: 'Ламель внутренняя' },
+    { key: 'side_planka', label: 'Боковая планка' },
+    { key: 'reinforce_planka', label: 'Усиливающая планка' },
+    { key: 'finish_planka', label: 'Завершающая планка' },
+    { key: 'cap_parapet', label: 'Крышка-парапет' },
     { key: 'profftruba', label: 'Профтруба' },
     { key: 'screw_stoyka', label: 'Саморезы (для стойки)' },
-    { key: 'screw_psh', label: 'Саморезы ПШ (для ламелей и добора)' }
+    { key: 'screw_psh', label: 'Саморезы ПШ' }
   ];
 
   const jHeights = [
@@ -385,64 +385,44 @@ function sizeBySpan(span){
       const lamelSize = roundToCmMeters(s.span - 0.01);
       const workMm = (s.name === 'fermer') ? 145 : 110; // рабочая ширина ламели (мм)
       const lamelQty = Math.ceil((s.height * 1000) / workMm) * s.sectionsQty;
-      addAgg(agg, 'lamel', lamelSize, lamelQty);
 
-      // Стойка
+      if (s.name === 'fermer') {
+        // Фермер: ламель делится на две
+        addAgg(agg, 'lamel_main', lamelSize, lamelQty);
+        addAgg(agg, 'lamel_inner', lamelSize, lamelQty);
+      } else {
+        // Жалюзи
+        addAgg(agg, 'lamel', lamelSize, lamelQty);
+      }
+
+      // Боковая/усиливающая планки (аналог "Стойки")
       const stoykaSize = sizeByHeightStoykaKrepezh(s.height);
       const stoykaQty = s.sectionsQty * 2;
-      addAgg(agg, 'stoyka', stoykaSize, stoykaQty);
+      addAgg(agg, 'side_planka', stoykaSize, stoykaQty);
+      addAgg(agg, 'reinforce_planka', stoykaSize, stoykaQty);
 
-      // Крепежная планка
-      const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
-      const fenceLen = s.span * s.sectionsQty;
-      const krepezhMultiplier = (fenceLen > 3) ? 2 : 1; // если длина забора (суммарно по секциям) > 3 м, крепежных планок в 2 раза больше
-      const krepezhQty = Math.ceil((s.span / 0.5)) * 2 * krepezhMultiplier * s.sectionsQty; // расстояние между столбов / 0,5 * 2 (если длина >3м) * кол-во секций, округление вверх
-      addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
-
-      // Крышка
-      const kryshkaSize = sizeBySpan(s.span);
-      const kryshkaQty = s.sectionsQty;
-      addAgg(agg, 'kryshka', kryshkaSize, kryshkaQty);
-
-      // Декоративная накладка (если столбы НЕ кирп/бетон)
-      if (s.brick === 'no') {
-        const dekorSize = sizeByHeightDekor(s.height);
-        const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
-        addAgg(agg, 'dekor', dekorSize, dekorQty);
+      // Завершающая/крышка-парапет (только для Жалюзи; аналог "Крышки")
+      let kryshkaQty = 0;
+      if (s.name === 'jaluzi') {
+        const kryshkaSize = sizeBySpan(s.span);
+        kryshkaQty = s.sectionsQty;
+        addAgg(agg, 'finish_planka', kryshkaSize, kryshkaQty);
+        addAgg(agg, 'cap_parapet', kryshkaSize, kryshkaQty);
       }
-
-      // Угловая декоративная накладка (если углы > 0)
-      if (s.corners > 0) {
-        const dekorUSize = sizeByHeightDekor(s.height);
-        const dekorUQty = s.corners;
-        addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
-      }
-
-      // Планка завершающая
-      const finishSize = sizeBySpan(s.span);
-      const finishQty = s.sectionsQty;
-      addAgg(agg, 'finish', finishSize, finishQty);
 
       // Профтруба (если выбрано не "нет")
-      let profftrubaQty = 0;
       if (s.pipe !== 'none') {
-        profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
+        const profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
         addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
 
       // Саморезы для стойки
       addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
 
-      // Саморезы ПШ
-      const screwPSHQty =
-        (lamelQty * 4) +
-        (krepezhQty * lamelQty) +
-        (kryshkaQty * 4) +
-        (finishQty * 2) +
-        (finishQty * krepezhQty);
-
+      // Саморезы ПШ (упрощённо, чтобы расчёт был стабильным)
+      const screwPSHQty = (lamelQty * 4) + (kryshkaQty * 8);
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
-    });
+    });    });
 
     const finalAgg = finalizeAgg(agg);
     renderBOMTable(finalAgg);
