@@ -1901,6 +1901,10 @@ function downloadSoffitPdf(){
   };
 
   function n(v){
+    // supports "10,5" and "10.5"
+    if (typeof v === 'string'){
+      v = v.replace(/\s+/g,'').replace(',', '.');
+    }
     const x = Number(v);
     return Number.isFinite(x) ? x : 0;
   }
