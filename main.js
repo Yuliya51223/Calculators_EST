@@ -1887,7 +1887,7 @@ function downloadSoffitPdf(){
   };
 
     const FENCE_PROFILES = {
-    profnastil: ['С8 1200/1150','С10 1170/1100','С16 1050/1000','НС18 1150/1100','Н21 1065/1010'],
+    profnastil: ['С8 1200/1150','С10 1170/1100','С16 1050/1000','НС18 1150/1100','Н21 1065/1010','НС35 1055/1000','НС44 1050/1000','НС60 930/860','Н75 800/740','Н114 670/620'],
     shtaketnik: ['Европланка 126','Евротрапеция 118'],
   };
 
@@ -1966,9 +1966,23 @@ function downloadSoffitPdf(){
   let roofLast = null;
   let roofSplit = false;
 
+  function displayName(s){
+    if (s==null) return '';
+    let t = String(s).trim();
+    // remove trailing "XXXX/YYYY"
+    t = t.replace(/\s*\d{2,4}\s*\/\s*\d{2,4}\s*$/,'');
+    // remove trailing single numeric token (e.g. "Европланка 126")
+    t = t.replace(/\s+\d{2,4}\s*$/,'');
+    return t.trim();
+  }
+
   function fillSelect(sel, items, placeholder='— выберите —'){
     if (!sel) return;
-    sel.innerHTML = `<option value="">${placeholder}</option>` + items.map(x=>`<option value="${x}">${x}</option>`).join('');
+    sel.innerHTML = `<option value="">${placeholder}</option>` + (items||[]).map(x=>{
+      const val = (x && typeof x==='object') ? (x.value ?? '') : x;
+      const label = (x && typeof x==='object') ? (x.label ?? displayName(val)) : displayName(val);
+      return `<option value="${val}">${label}</option>`;
+    }).join('');
   }
 
   function roofRenderProfile(){
@@ -2039,7 +2053,7 @@ function downloadSoffitPdf(){
   function roofRender(data){
     if (!rResult) return;
     const lines = [];
-    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${data.prof} (раб. ширина ${fmt(data.w,3)} м)</div>`);
+    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${displayName(data.prof)} (раб. ширина ${fmt(data.w,3)} м)</div>`);
     // Кол-во листов
     if (!roofSplit){
       lines.push(`<div class="mp-summary"><b>Количество листов:</b> ${fmtInt(data.sheets)} шт</div>`);
@@ -2284,7 +2298,7 @@ function downloadSoffitPdf(){
     if (data.useArea){
       lines.push(`<div class="mp-summary"><b>Расчётная длина забора:</b> ${fmt(data.length)} м</div>`);
     }
-    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${data.prof}</div>`);
+    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${displayName(data.prof)}</div>`);
     lines.push(`<div class="mp-summary"><b>Количество листов/планок:</b> ${fmtInt(data.sheets)} шт</div>`);
     lines.push(`<div class="mp-summary"><b>Длина элементов:</b> ${fmt(data.height)} м</div>`);
     if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₽</div>`);
@@ -2606,7 +2620,7 @@ function downloadSoffitPdf(){
       blocks.push(`
         <div class="mp-wall-res">
           <div><b>Стена ${i+1}</b></div>
-          <div class="mp-summary">Профиль: ${w.prof} (раб. ширина ${fmt(w.ww,3)} м)</div>
+          <div class="mp-summary">Профиль: ${displayName(w.prof)} (раб. ширина ${fmt(w.ww,3)} м)</div>
           <div class="mp-summary">Кол-во листов: ${fmtInt(w.sheets)} шт</div>
           <div class="mp-summary">Длина листов: ${fmt(w.sheetLen)} м</div>
           <div class="mp-summary">Площадь: ${fmt(w.area)} м²</div>
@@ -2704,7 +2718,7 @@ function downloadSoffitPdf(){
     } else {
       // fallback без таблиц
       facadeLast.walls.forEach((w,i)=>{
-        doc.text(`Стена ${i+1}: H=${fmt(w.h)} м, L=${fmt(w.L)} м, профиль ${w.prof}, листов ${fmtInt(w.sheets)} шт`, 14, y);
+        doc.text(`Стена ${i+1}: H=${fmt(w.h)} м, L=${fmt(w.L)} м, профиль ${displayName(w.prof)}, листов ${fmtInt(w.sheets)} шт`, 14, y);
         y += 7;
       });
     }
