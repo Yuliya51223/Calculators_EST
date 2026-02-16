@@ -160,7 +160,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             </select>
           </div>
 
-          <div class="field">
+          <div class="field j_depth_field hidden">
             <label>Заглубление столба (м)</label>
             <select class="j_depth">
               ${optionsHTML(jDepths, '— выберите —')}
@@ -180,6 +180,21 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       if (!nameSel.value) heightSel.value = '';
       jResetOutput();
     });
+
+    // заглубление показываем только для 60×60 и 80×80
+    const pipeSel = div.querySelector('.j_pipe');
+    const depthField = div.querySelector('.j_depth_field');
+    const depthSel = div.querySelector('.j_depth');
+    function syncDepthVisibility(){
+      const v = pipeSel ? pipeSel.value : '';
+      const on = (v === '60x60' || v === '80x80');
+      if (depthField) depthField.classList.toggle('hidden', !on);
+      if (!on && depthSel) depthSel.value = '';
+    }
+    if (pipeSel){
+      pipeSel.addEventListener('change', () => { syncDepthVisibility(); jResetOutput(); });
+    }
+    syncDepthVisibility();
 
     // удаление секции
     const removeBtn = div.querySelector('.remove-section');
@@ -362,7 +377,11 @@ function sizeBySpan(span){
       if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `Секция ${idx}: выберите высоту`; return; }
       if (!isFinite(s.span) || s.span < 0.5 || s.span > 3) { jErr.textContent = `Секция ${idx}: расстояние между столбов 0,5–3 м`; return; }
       if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }      if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
-      if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
+      if (s.pipe === '60x60' || s.pipe === '80x80') {
+        if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
+      } else {
+        s.depth = 0;
+      }
     }
 
     const agg = {};
