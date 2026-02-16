@@ -1715,8 +1715,6 @@ function sFmt(n, digits = 2){
 
 function sMaterialName(key){
   if (key === 'c8') return 'Профнастил С8';
-  if (key === 'soffit_lb_perfor') return 'Софит Л-брус перфорированный';
-  if (key === 'lb') return 'Л-брус';
   if (key === 'evrobrus') return 'Евробрус';
   return key;
 }
