@@ -1,3 +1,18 @@
+html{ background:#ffffff; }
+
+body{ position: relative; }
+
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("est-logo.png") no-repeat center;
+  background-size: min(520px, 60vw) auto;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: -1;
+}
+
 body{
   font-family: Montserrat, sans-serif;
   max-width: 980px;
