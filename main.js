@@ -61,23 +61,17 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   let sectionIndex = 0;
 
   const BOM_ITEMS = [
-    { key: 'lamel', label: 'Ламель' },
-    { key: 'lamel_main', label: 'Ламель основная' },
-    { key: 'lamel_inner', label: 'Ламель внутренняя' },
-    { key: 'side_planka', label: 'Боковая планка' },
-    { key: 'reinforce_planka', label: 'Усиливающая планка' },
-    { key: 'finish_planka', label: 'Завершающая планка' },
-    { key: 'cap_parapet', label: 'Крышка-парапет' },
+    { key: 'lamel', label: 'Ламель Хоста' },
+    { key: 'stoyka', label: 'Стойка' },
+    { key: 'krepezh', label: 'Крепежная планка' },
+    { key: 'kryshka', label: 'Крышка' },
+    { key: 'dekor', label: 'Декоративная\nнакладка' },
+    { key: 'dekor_ugol', label: 'Декоративная\nнакладка угловая' },
+    { key: 'finish', label: 'Планка завершающая' },
     { key: 'profftruba', label: 'Профтруба' },
     { key: 'screw_stoyka', label: 'Саморезы (для стойки)' },
-    { key: 'screw_psh', label: 'Саморезы ПШ' }
+    { key: 'screw_psh', label: 'Саморезы ПШ (для ламелей и добора)' }
   ];
-
-  function visibleBomItems(finalAgg){
-    const items = BOM_ITEMS.filter(it => (finalAgg?.[it.key]?.length));
-    return items.length ? items : BOM_ITEMS;
-  }
-
 
   const jHeights = [
     0.48,0.58,0.67,0.77,0.86,0.96,1.05,1.15,1.24,1.34,
@@ -126,14 +120,16 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             <label>Наименование забора</label>
             <select class="j_name">
               <option value="">— выберите —</option>
-              <option value="jaluzi">Жалюзи</option>
-              <option value="fermer">Фермер</option>
+              <option value="yukka">Юкка</option>
+              <option value="hosta">Хоста</option>
             </select>
           </div>
 
           <div class="field">
             <label>Высота забора (м)</label>
-            <input class="j_height" type="number" min="0" step="0.01" disabled>
+            <select class="j_height" disabled>
+              ${optionsHTML(jHeights, '— выберите высоту —')}
+            </select>
           </div>
 
           <div class="field">
@@ -147,7 +143,21 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             <label>Расстояние между столбов (м) <span class="hint">(от 0,5 до 3 м)</span></label>
             <input class="j_span" type="number" min="0.5" max="3" step="0.01">
           </div>
-</div>
+
+          <div class="field">
+            <label>Количество углов 90°</label>
+            <input class="j_corners" type="number" min="0" step="1">
+          </div>
+
+          <div class="field">
+            <label>Кирпичные/Бетонные столбы</label>
+            <select class="j_brick">
+              <option value="">— выберите —</option>
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+            </select>
+          </div>
+        </div>
 
         <div class="col">
           <div class="field">
@@ -160,7 +170,7 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
             </select>
           </div>
 
-          <div class="field j_depth_field hidden">
+          <div class="field">
             <label>Заглубление столба (м)</label>
             <select class="j_depth">
               ${optionsHTML(jDepths, '— выберите —')}
@@ -181,21 +191,6 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       jResetOutput();
     });
 
-    // заглубление показываем только для 60×60 и 80×80
-    const pipeSel = div.querySelector('.j_pipe');
-    const depthField = div.querySelector('.j_depth_field');
-    const depthSel = div.querySelector('.j_depth');
-    function syncDepthVisibility(){
-      const v = pipeSel ? pipeSel.value : '';
-      const on = (v === '60x60' || v === '80x80');
-      if (depthField) depthField.classList.toggle('hidden', !on);
-      if (!on && depthSel) depthSel.value = '';
-    }
-    if (pipeSel){
-      pipeSel.addEventListener('change', () => { syncDepthVisibility(); jResetOutput(); });
-    }
-    syncDepthVisibility();
-
     // удаление секции
     const removeBtn = div.querySelector('.remove-section');
     removeBtn.addEventListener('click', () => {
@@ -209,6 +204,56 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       el.addEventListener('input', jResetOutput);
       el.addEventListener('change', jResetOutput);
     });
+
+
+    // --- UI rules ---
+    const brickSel = div.querySelector('.j_brick');
+    const pipeSel  = div.querySelector('.j_pipe');
+    const depthSel = div.querySelector('.j_depth');
+    const pipeField  = pipeSel ? pipeSel.closest('.field') : null;
+    const depthField = depthSel ? depthSel.closest('.field') : null;
+
+    function applyJaluziUiRules(){
+      const brickYes = brickSel && brickSel.value === 'yes';
+
+      // 1) Размер профтрубы: если кирп/бетон = да -> поле НЕ скрываем, а отключаем
+      if (pipeField){
+        pipeField.classList.toggle('disabled-field', brickYes);
+      }
+      if (pipeSel){
+        pipeSel.disabled = !!brickYes;
+      }
+      if (brickYes && pipeSel){
+        pipeSel.value = 'none';
+      }
+
+      // 2) Заглубление: активно только если профтруба выбрана (не "нет") и кирп/бетон = нет
+      const allowDepth = (!brickYes) && pipeSel && (pipeSel.value !== 'none');
+      if (depthField){
+        depthField.classList.toggle('disabled-field', !allowDepth);
+      }
+      if (depthSel){
+        depthSel.disabled = !allowDepth;
+        if (!allowDepth) depthSel.value = '';
+      }
+    }
+      if (brickYes && pipeSel){
+        pipeSel.value = 'none';
+      }
+
+      // Depth shown only when pipe is selected (not "none") AND brick is not yes
+      const showDepth = (!brickYes) && pipeSel && pipeSel.value !== 'none';
+      if (depthField){
+        depthField.classList.toggle('hidden', !showDepth);
+        if (!showDepth && depthSel) depthSel.value = '';
+      }
+    }
+
+    if (brickSel) brickSel.addEventListener('change', applyJaluziUiRules);
+    if (pipeSel) pipeSel.addEventListener('change', applyJaluziUiRules);
+
+    // apply on init
+    applyJaluziUiRules();
 
     updateSectionTitles();
   }
@@ -244,21 +289,20 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
   }
 
   function renderBOMTable(agg){
-    const ITEMS = visibleBomItems(agg);
-    const cols1 = ITEMS.map(it => {
+    const cols1 = BOM_ITEMS.map(it => {
       const title = esc(it.label).replaceAll('\n','<br>');
       return `<th colspan="2">${title}</th>`;
     }).join('');
 
-    const cols2 = ITEMS.map(() =>
+    const cols2 = BOM_ITEMS.map(() =>
       `<th class="subhead">Размер, м</th><th class="subhead">Кол-во, шт</th>`
     ).join('');
 
-    const maxRows = Math.max(1, ...ITEMS.map(it => (agg[it.key]?.length || 0)));
+    const maxRows = Math.max(1, ...BOM_ITEMS.map(it => (agg[it.key]?.length || 0)));
 
     let body = '';
     for (let r = 0; r < maxRows; r++){
-      const tds = ITEMS.map(it => {
+      const tds = BOM_ITEMS.map(it => {
         const rec = agg[it.key]?.[r];
         const size = rec ? rec.size : '—';
         const qty  = rec ? rec.qty  : '—';
@@ -287,9 +331,12 @@ if (!sectionsWrap || !addSectionBtn || !jCalcBtn || !jErr || !jTableWrap || !jPd
       const name = sec.querySelector('.j_name')?.value || '';
       const height = Number((sec.querySelector('.j_height')?.value || '').replace(',', '.'));
       const span = Number(sec.querySelector('.j_span')?.value);
-      const sectionsQty = Number(sec.querySelector('.j_sections')?.value);      const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
+      const sectionsQty = Number(sec.querySelector('.j_sections')?.value);
+      const corners = Number(sec.querySelector('.j_corners')?.value);
+      const brick = sec.querySelector('.j_brick')?.value || '';
+      const pipe = sec.querySelector('.j_pipe')?.value || ''; // none / 60x60 / 80x80
       const depth = Number((sec.querySelector('.j_depth')?.value || '').replace(',', '.'));
-      return { name, height, span, sectionsQty, pipe, depth };
+      return { name, height, span, sectionsQty, corners, brick, pipe, depth };
     });
   }
 
@@ -376,12 +423,11 @@ function sizeBySpan(span){
       if (!s.name) { jErr.textContent = `Секция ${idx}: выберите наименование`; return; }
       if (!isFinite(s.height) || s.height <= 0) { jErr.textContent = `Секция ${idx}: выберите высоту`; return; }
       if (!isFinite(s.span) || s.span < 0.5 || s.span > 3) { jErr.textContent = `Секция ${idx}: расстояние между столбов 0,5–3 м`; return; }
-      if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }      if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
-      if (s.pipe === '60x60' || s.pipe === '80x80') {
-        if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
-      } else {
-        s.depth = 0;
-      }
+      if (!Number.isInteger(s.sectionsQty) || s.sectionsQty <= 0) { jErr.textContent = `Секция ${idx}: количество секций — целое > 0`; return; }
+      if (!Number.isInteger(s.corners) || s.corners < 0) { jErr.textContent = `Секция ${idx}: углы — целое ≥ 0`; return; }
+      if (!s.brick) { jErr.textContent = `Секция ${idx}: выберите кирпичные/бетонные столбы`; return; }
+      if (!s.pipe) { jErr.textContent = `Секция ${idx}: выберите размер профтрубы`; return; }
+      if (!isFinite(s.depth) || s.depth < 0.3 || s.depth > 1.5) { jErr.textContent = `Секция ${idx}: заглубление 0,3–1,5 м`; return; }
     }
 
     const agg = {};
@@ -389,44 +435,64 @@ function sizeBySpan(span){
     data.forEach(s => {
       // Ламели
       const lamelSize = roundToCmMeters(s.span - 0.01);
-      const workMm = (s.name === 'fermer') ? 145 : 110; // рабочая ширина ламели (мм)
-      const lamelQty = Math.ceil((s.height * 1000) / workMm) * s.sectionsQty;
+      const lamelQty = Math.floor(s.height / 0.095 * s.sectionsQty);
+      addAgg(agg, 'lamel', lamelSize, lamelQty);
 
-      if (s.name === 'fermer') {
-        // Фермер: ламель делится на две
-        addAgg(agg, 'lamel_main', lamelSize, lamelQty);
-        addAgg(agg, 'lamel_inner', lamelSize, lamelQty);
-      } else {
-        // Жалюзи
-        addAgg(agg, 'lamel', lamelSize, lamelQty);
-      }
-
-      // Боковая/усиливающая планки (аналог "Стойки")
+      // Стойка
       const stoykaSize = sizeByHeightStoykaKrepezh(s.height);
       const stoykaQty = s.sectionsQty * 2;
-      addAgg(agg, 'side_planka', stoykaSize, stoykaQty);
-      addAgg(agg, 'reinforce_planka', stoykaSize, stoykaQty);
+      addAgg(agg, 'stoyka', stoykaSize, stoykaQty);
 
-      // Завершающая/крышка-парапет (только для Жалюзи; аналог "Крышки")
-      let kryshkaQty = 0;
-      if (s.name === 'jaluzi') {
-        const kryshkaSize = sizeBySpan(s.span);
-        kryshkaQty = s.sectionsQty;
-        addAgg(agg, 'finish_planka', kryshkaSize, kryshkaQty);
-        addAgg(agg, 'cap_parapet', kryshkaSize, kryshkaQty);
+      // Крепежная планка
+      const krepezhSize = sizeByHeightStoykaKrepezh(s.height);
+      // формула: расстояние между столбов / 1 * кол-во секций (округляем вверх)
+      const krepezhQty = Math.ceil((s.span / 1) * s.sectionsQty);
+      addAgg(agg, 'krepezh', krepezhSize, krepezhQty);
+
+      // Крышка
+      const kryshkaSize = sizeBySpan(s.span);
+      const kryshkaQty = s.sectionsQty;
+      addAgg(agg, 'kryshka', kryshkaSize, kryshkaQty);
+
+      // Декоративная накладка (если столбы НЕ кирп/бетон)
+      if (s.brick === 'no' && s.pipe !== 'none') {
+        const dekorSize = sizeByHeightDekor(s.height);
+        const dekorQty = (s.sectionsQty + 1) * 2 - (s.corners * 2);
+        addAgg(agg, 'dekor', dekorSize, dekorQty);
       }
 
+      // Угловая декоративная накладка (если углы > 0)
+      if (s.corners > 0 && s.pipe !== 'none') {
+        const dekorUSize = sizeByHeightDekor(s.height);
+        const dekorUQty = s.corners;
+        addAgg(agg, 'dekor_ugol', dekorUSize, dekorUQty);
+      }
+
+      // Планка завершающая
+      const finishSize = sizeBySpan(s.span);
+      const finishQty = s.sectionsQty;
+      addAgg(agg, 'finish', finishSize, finishQty);
+
       // Профтруба (если выбрано не "нет")
+      let profftrubaQty = 0;
       if (s.pipe !== 'none') {
-        const profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
+        profftrubaQty = Math.ceil((2 * (s.height + s.depth)) / 6);
         addAgg(agg, 'profftruba', 6, profftrubaQty);
       }
 
-      // Саморезы для стойки
-      addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
+      // Саморезы для стойки (не считаем, если профтруба = нет)
+      if (s.pipe !== 'none') {
+        addAgg(agg, 'screw_stoyka', '5.5x19', stoykaQty * 5);
+      }
 
-      // Саморезы ПШ (упрощённо, чтобы расчёт был стабильным)
-      const screwPSHQty = (lamelQty * 4) + (kryshkaQty * 8);
+      // Саморезы ПШ
+      const screwPSHQty =
+        (lamelQty * 4) +
+        (krepezhQty * lamelQty) +
+        (kryshkaQty * 4) +
+        (finishQty * 2) +
+        (finishQty * krepezhQty);
+
       addAgg(agg, 'screw_psh', '4.2x16', screwPSHQty);
     });
 
@@ -437,13 +503,12 @@ lastFinalAgg = finalAgg;
 jPdfBtn.classList.remove('hidden');
   }
 function buildBomRows(finalAgg){
-  const ITEMS = visibleBomItems(finalAgg);
-  const maxRows = Math.max(1, ...ITEMS.map(it => (finalAgg[it.key]?.length || 0)));
+  const maxRows = Math.max(1, ...BOM_ITEMS.map(it => (finalAgg[it.key]?.length || 0)));
 
   const rows = [];
   for (let r = 0; r < maxRows; r++){
     const row = [];
-    ITEMS.forEach(it => {
+    BOM_ITEMS.forEach(it => {
       const rec = finalAgg[it.key]?.[r];
       row.push(rec ? String(rec.size).replace('.', ',') : '—');
       row.push(rec ? String(Math.round(rec.qty)) : '—');
@@ -486,14 +551,19 @@ function downloadJaluziPdf(){
 
   // ===== Таблица введённых данных по секциям =====
   const secHead = [[
-    'Секция', 'Наименование', 'Высота, м', 'Расст. между, м', 'Секций, шт', 'Проф труба', 'Заглубление, м']];
+    'Секция', 'Наименование', 'Высота, м', 'Расст. между, м', 'Секций, шт', 'Углы 90°, шт',
+    'Кирп/бетон', 'Проф труба', 'Заглубление, м'
+  ]];
 
   const secBody = lastSectionsData.map((s, i) => ([
     String(i + 1),
-    s.name === 'jaluzi' ? 'Жалюзи' : (s.name === 'fermer' ? 'Фермер' : s.name),
+    s.name === 'yukka' ? 'Юкка' : (s.name === 'hosta' ? 'Хоста' : s.name),
     String(s.height).replace('.', ','),
     String(s.span).replace('.', ','),
-    String(s.sectionsQty),    s.pipe === 'none' ? 'нет' : (s.pipe === '60x60' ? '60×60' : (s.pipe === '80x80' ? '80×80' : s.pipe)),
+    String(s.sectionsQty),
+    String(s.corners),
+    s.brick === 'yes' ? 'Да' : 'Нет',
+    s.pipe === 'none' ? 'нет' : (s.pipe === '60x60' ? '60×60' : (s.pipe === '80x80' ? '80×80' : s.pipe)),
     String(s.depth).replace('.', ',')
   ]));
 
@@ -534,15 +604,14 @@ function downloadJaluziPdf(){
   let y = doc.lastAutoTable.finalY + 8;
 
   // ===== Таблица расчёта (колонка-группами) =====
-  const ITEMS = visibleBomItems(lastFinalAgg);
-  const head1 = ITEMS.map(it => ({
+  const head1 = BOM_ITEMS.map(it => ({
     content: it.label.replace('\n', ' '),
     colSpan: 2,
     styles: { halign: 'center' }
   }));
 
   const head2 = [];
-  ITEMS.forEach(() => {
+  BOM_ITEMS.forEach(() => {
     head2.push('Размер, м');
     head2.push('Кол-во, шт');
   });
@@ -1697,6 +1766,8 @@ function sFmt(n, digits = 2){
 
 function sMaterialName(key){
   if (key === 'c8') return 'Профнастил С8';
+  if (key === 'soffit_lb_perfor') return 'Софит Л-брус перфорированный';
+  if (key === 'lb') return 'Л-брус';
   if (key === 'evrobrus') return 'Евробрус';
   return key;
 }
@@ -1845,46 +1916,94 @@ function downloadSoffitPdf(){
   const mpFacade = document.getElementById('mp_facade');
 
   // --- справочники ширины (мм) ---
-    // --- справочники ширины (мм) ---
-  // Если в названии профиля есть "TOTAL/WORK", то ширина берётся из него (max/min).
   const WIDTH_WORK_MM = {
-    // справочник для профилей без размеров вида "X/Y" в названии
-    'Европланка 126': 126,
-    'Евротрапеция 118': 118,
+    // Профнастил (кровля/забор/фасад)
+    'С8': 1150,
+    'НС16': 1100,
+    'С20': 1100,
+    'К20': 1130,
+    'С21': 1000,
+    'НС35': 1000,
+    'Н60': 845,
+    'Н75': 750,
+
+    // Фальц
+    'Двойной стоячий': 550,
+
+    // Металлочерепица (по вашим размерам)
+    'Супермонтеррей/Феникс': 1100,
+    'Геркулес/Орион': 1150,
+    'Каскад/Пегас': 1130,
+    // Дюна/Лира: рабочая ширина часто 1040 мм (см. тех.описания профиля «Дюна»)
+    'Дюна/Лира': 1040,
+
+    // Сайдинг
+    'Корабельная доска': 236,
+    'Евробрус': 340,
+    'Блок-хаус': 355,
+    'Л-брус': 240,
+    'ЛайнПро': 176,
+
+    // Штакетник (ширина планки)
+    'Европланка': 126,
+    'Евротрапеция': 117,
+    'Европланка Престиж': 131,
+    'М-образный Престиж': 118,
   };
 
   // --- общая (полная) ширина (мм) ---
-    // --- общая (полная) ширина (мм) ---
   const WIDTH_TOTAL_MM = {
-    // справочник для профилей без размеров вида "X/Y" в названии
-    'Европланка 126': 126,
-    'Евротрапеция 118': 118,
+    // Профнастил
+    'С8': 1200,
+    'НС16': 1150,
+    'С20': 1150,
+    'К20': 1195,
+    'С21': 1051,
+    'НС35': 1060,
+    'Н60': 902,
+    'Н75': 800,
+
+    // Фальц
+    'Двойной стоячий': 562,
+
+    // Металлочерепица
+    'Супермонтеррей/Феникс': 1180,
+    'Геркулес/Орион': 1200,
+    'Каскад/Пегас': 1195,
+    'Дюна/Лира': 1180,
+
+    // Сайдинг
+    'Корабельная доска': 267,
+    'Евробрус': 359,
+    'Блок-хаус': 383,
+    'Л-брус': 264,
+    'ЛайнПро': 200,
+
+    // Штакетник
+    'Европланка': 126,
+    'Евротрапеция': 117,
+    'Европланка Престиж': 131,
+    'М-образный Престиж': 118,
   };
 
 
-    const ROOF_PROFILES = {
-    profnastil: [
-      'С8 1200/1150','С10 1170/1100','С16 1050/1000','НС18 1150/1100','Н21 1065/1010',
-      'НС35 1055/1000','НС44 1050/1000','НС60 930/860','Н75 800/740','Н114 670/620'
-    ],
-    tile: ['Супермонтеррей 1180/1100','Панорама 1200/1500'],
+  const ROOF_PROFILES = {
+    profnastil: ['К20','С20','С21','НС35','Н60','Н75'],
+    tile: ['Супермонтеррей/Феникс','Геркулес/Орион','Каскад/Пегас','Дюна/Лира'],
+    falz: ['Двойной стоячий'],
   };
 
-    const FENCE_PROFILES = {
-    profnastil: ['С8 1200/1150','С10 1170/1100','С16 1050/1000','НС18 1150/1100','Н21 1065/1010','НС35 1055/1000','НС44 1050/1000','НС60 930/860','Н75 800/740','Н114 670/620'],
-    shtaketnik: ['Европланка 126','Евротрапеция 118'],
+  const FENCE_PROFILES = {
+    profnastil: ['С8','НС16','К20','С20','С21'],
+    shtaketnik: ['Европланка','Евротрапеция','Европланка Престиж','М-образный Престиж'],
   };
 
-    const FACADE_PROFILES = {
-    profnastil: ['С8 1200/1150','С10 1170/1100','С16 1050/1000'],
-    siding: ['Корабельная доска 260/226','Блок-хаус 356/330','Евробрус 264/240'],
+  const FACADE_PROFILES = {
+    profnastil: ['С8','НС16'],
+    siding: ['Корабельная доска','Евробрус','Блок-хаус','Л-брус','ЛайнПро'],
   };
 
   function n(v){
-    // supports "10,5" and "10.5"
-    if (typeof v === 'string'){
-      v = v.replace(/\s+/g,'').replace(',', '.');
-    }
     const x = Number(v);
     return Number.isFinite(x) ? x : 0;
   }
@@ -1899,27 +2018,11 @@ function downloadSoffitPdf(){
     if (!Number.isFinite(x)) return '—';
     return String(Math.round(x));
   }
-    function workWidthM(key){
-    // Если в названии есть "число/число" — берём min как рабочую ширину.
-    const m = String(key).match(/(\d{2,4})\s*\/\s*(\d{2,4})/);
-    if (m){
-      const a = Number(m[1]);
-      const b = Number(m[2]);
-      const mm = Math.min(a,b);
-      return mm ? (mm/1000) : 0;
-    }
+  function workWidthM(key){
     const mm = WIDTH_WORK_MM[key];
     return mm ? (mm/1000) : 0;
   }
-    function totalWidthM(key){
-    // Если в названии есть "число/число" — берём max как общую ширину.
-    const m = String(key).match(/(\d{2,4})\s*\/\s*(\d{2,4})/);
-    if (m){
-      const a = Number(m[1]);
-      const b = Number(m[2]);
-      const mm = Math.max(a,b);
-      return mm ? (mm/1000) : 0;
-    }
+  function totalWidthM(key){
     const mm = WIDTH_TOTAL_MM[key];
     return mm ? (mm/1000) : 0;
   }
@@ -1954,23 +2057,9 @@ function downloadSoffitPdf(){
   let roofLast = null;
   let roofSplit = false;
 
-  function displayName(s){
-    if (s==null) return '';
-    let t = String(s).trim();
-    // remove trailing "XXXX/YYYY"
-    t = t.replace(/\s*\d{2,4}\s*\/\s*\d{2,4}\s*$/,'');
-    // remove trailing single numeric token (e.g. "Европланка 126")
-    t = t.replace(/\s+\d{2,4}\s*$/,'');
-    return t.trim();
-  }
-
   function fillSelect(sel, items, placeholder='— выберите —'){
     if (!sel) return;
-    sel.innerHTML = `<option value="">${placeholder}</option>` + (items||[]).map(x=>{
-      const val = (x && typeof x==='object') ? (x.value ?? '') : x;
-      const label = (x && typeof x==='object') ? (x.label ?? displayName(val)) : displayName(val);
-      return `<option value="${val}">${label}</option>`;
-    }).join('');
+    sel.innerHTML = `<option value="">${placeholder}</option>` + items.map(x=>`<option value="${x}">${x}</option>`).join('');
   }
 
   function roofRenderProfile(){
@@ -2041,7 +2130,7 @@ function downloadSoffitPdf(){
   function roofRender(data){
     if (!rResult) return;
     const lines = [];
-    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${displayName(data.prof)} (раб. ширина ${fmt(data.w,3)} м)</div>`);
+    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${data.prof} (раб. ширина ${fmt(data.w,3)} м)</div>`);
     // Кол-во листов
     if (!roofSplit){
       lines.push(`<div class="mp-summary"><b>Количество листов:</b> ${fmtInt(data.sheets)} шт</div>`);
@@ -2272,7 +2361,7 @@ function downloadSoffitPdf(){
       let screws = 0;
       if (fScrews?.checked){
         if (mat==='profnastil') screws = 12 * sheets;
-        else screws = 4 * sheets;
+        else screws = (prof==='М-образный Престиж') ? (2*sheets) : (4*sheets);
       }
 
       pipes = {depth, step, lags, pipeSize, posts, postPcs6, lagPcs6, caps, screws};
@@ -2286,7 +2375,7 @@ function downloadSoffitPdf(){
     if (data.useArea){
       lines.push(`<div class="mp-summary"><b>Расчётная длина забора:</b> ${fmt(data.length)} м</div>`);
     }
-    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${displayName(data.prof)}</div>`);
+    lines.push(`<div class="mp-summary"><b>Профиль:</b> ${data.prof}</div>`);
     lines.push(`<div class="mp-summary"><b>Количество листов/планок:</b> ${fmtInt(data.sheets)} шт</div>`);
     lines.push(`<div class="mp-summary"><b>Длина элементов:</b> ${fmt(data.height)} м</div>`);
     if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₽</div>`);
@@ -2608,7 +2697,7 @@ function downloadSoffitPdf(){
       blocks.push(`
         <div class="mp-wall-res">
           <div><b>Стена ${i+1}</b></div>
-          <div class="mp-summary">Профиль: ${displayName(w.prof)} (раб. ширина ${fmt(w.ww,3)} м)</div>
+          <div class="mp-summary">Профиль: ${w.prof} (раб. ширина ${fmt(w.ww,3)} м)</div>
           <div class="mp-summary">Кол-во листов: ${fmtInt(w.sheets)} шт</div>
           <div class="mp-summary">Длина листов: ${fmt(w.sheetLen)} м</div>
           <div class="mp-summary">Площадь: ${fmt(w.area)} м²</div>
@@ -2706,7 +2795,7 @@ function downloadSoffitPdf(){
     } else {
       // fallback без таблиц
       facadeLast.walls.forEach((w,i)=>{
-        doc.text(`Стена ${i+1}: H=${fmt(w.h)} м, L=${fmt(w.L)} м, профиль ${displayName(w.prof)}, листов ${fmtInt(w.sheets)} шт`, 14, y);
+        doc.text(`Стена ${i+1}: H=${fmt(w.h)} м, L=${fmt(w.L)} м, профиль ${w.prof}, листов ${fmtInt(w.sheets)} шт`, 14, y);
         y += 7;
       });
     }
