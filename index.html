@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Калькуляторы продукции</title>
+  <link rel="icon" type="image/png" href="est-logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Калькуляторы</h1>
+  <div class="top-note">
+    Все пожелания и сообщения об ошибках отправляйте через форму:
+    <a href="https://forms.gle/aV3anXVvS5LS3Gds5" target="_blank" rel="noopener noreferrer">https://forms.gle/aV3anXVvS5LS3Gds5</a>
+  </div>
+  <section class="card" id="calc-picker" style="margin-top:16px;">
+    <h2>Выбор калькулятора</h2>
+    <div class="grid" style="margin-top:12px;">
+      <div>
+        <label for="calcSelect">Калькулятор</label>
+        <select id="calcSelect">
+          <option value="">— выберите —</option>
+        </select>
+      </div>
+      <div></div><div></div>
+    </div>
+    <div class="hint">Выберите калькулятор из списка — появится соответствующий блок.</div>
+  </section>
+
+
+
+<!-- КАЛЬКУЛЯТОР ЖАЛЮЗИЙНОГО ЗАБОРА -->
+
+  <section class="card calc-item" data-calc="jaluzi" style="margin-top:16px;">
+  <h2>Калькулятор жалюзийного забора</h2>
+
+  <!-- КОНТЕЙНЕР СЕКЦИЙ -->
+  <div id="sectionsWrap"></div>
+
+  <button id="addSectionBtn" type="button">Добавить секцию</button>
+<button id="j_pdfBtn" type="button" class="hidden">Скачать PDF</button>
+  <button id="j_calcBtn" type="button">Рассчитать</button>
+
+  
+
+<div id="j_tableWrap"></div>
+<div class="err" id="j_err"></div>
+
+<button id="j_pdfBtn" type="button" class="hidden">Скачать PDF</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="fonts.js"></script>
+</section>
+
+<!-- КАЛЬКУЛЯТОР АРОЧНОГО ШТАКЕТНИКА -->
+
+<section class="card calc-item" data-calc="arched" style="margin-top:16px;">
+  <h2>Калькулятор арочного штакетника</h2>
+
+  <div class="grid">
+    <div>
+      <label for="a_span">Ширина пролёта (м)</label>
+      <input id="a_span" type="number" value="0" min="0" step="0.01">
+    </div>
+
+    <div>
+      <label for="a_edge_h">Высота у стоек (м)</label>
+      <input id="a_edge_h" type="number" value="0" min="0" step="0.01">
+    </div>
+
+    <div>
+      <label for="a_center_h">Высота по центру (м)</label>
+      <input id="a_center_h" type="number" value="0" min="0" step="0.01">
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+  <label for="a_plank_w">Ширина планки (м)</label>
+  <select id="a_plank_w">
+    <option value="">— выберите —</option>
+    <option value="0.126">0,126</option>
+    <option value="0.118">0,118</option>
+  </select>
+</div>
+
+
+    <div>
+      <label for="a_gap">Зазор между планками (см)</label>
+      <input id="a_gap" type="number" value="0" min="0" step="0.1">
+    </div>
+
+    <div>
+      <label for="a_chess">Шахматный порядок</label>
+      <select id="a_chess">
+        <option value="no">Нет</option>
+        <option value="yes">Да</option>
+      </select>
+    </div>
+  </div>
+
+  <button id="a_calcBtn" type="button">Рассчитать</button>
+<button id="a_pdfBtn" type="button" class="hidden" style="margin-left:12px;">
+  Скачать PDF
+</button>
+
+  <div class="out">
+    <div class="row"><span>Количество планок (шт)</span><strong id="a_qty">—</strong></div>
+    <div class="row"><span>Мин. высота (м)</span><strong id="a_min">—</strong></div>
+    <div class="row"><span>Макс. высота (м)</span><strong id="a_max">—</strong></div>
+    <div class="err" id="a_err"></div>
+
+    <div id="a_tableWrap" style="margin-top:12px;"></div>
+    <div id="a_summaryWrap" style="margin-top:12px;"></div>
+  </div>
+</section>
+
+<!-- КАЛЬКУЛЯТОР ПОДСИСТЕМЫ НА ФАСАД -->
+
+<section class="card calc-item" data-calc="facade_subsys" style="margin-top:16px;">
+  <h2>Калькулятор подсистемы на фасад</h2>
+
+  <div id="f_wallsWrap"></div>
+
+  <button id="f_addWallBtn" type="button" class="add-section">Добавить стену</button>
+  <button id="f_pdfBtn" type="button" class="hidden" style="margin-left:12px;">Скачать PDF</button>
+  <button id="f_calcBtn" type="button" style="margin-left:12px;">Рассчитать</button>
+
+  <div class="out" style="margin-top:12px;">
+    <div id="f_tableWrap"></div>
+    <div class="err" id="f_err"></div>
+  </div>
+</section>
+
+<!-- КАЛЬКУЛЯТОР ВОДОСТОЧНОЙ СИСТЕМЫ -->
+<section class="card calc-item" data-calc="gutter" style="margin-top:16px;">
+  <h2>Калькулятор водосточной системы</h2>
+
+  <div class="grid">
+    <div>
+      <label for="g_type">Тип водосточной системы</label>
+      <select id="g_type">
+        <option value="metal" selected>Металлическая</option>
+        <option value="plastic">Пластиковая</option>
+      </select>
+    </div>
+
+    <div id="g_metal_brand_wrap">
+      <label for="g_metal_brand">Производитель</label>
+      <select id="g_metal_brand">
+        <option value="vegaprom_185x140_zn" selected>Vegaprom 185х140 (цинк)</option>
+        <option value="vegaprom_185x140_pe">Vegaprom 185х140 (ПЭ)</option>
+        <option value="vegaprom_185x150_zn">Vegaprom 185х150 (цинк)</option>
+        <option value="vegaprom_185x150_pe">Vegaprom 185х150 (ПЭ)</option>
+        <option value="vegaprom_200x180_zn">Vegaprom 200х180 (цинк)</option>
+        <option value="vegaprom_200x180_pe">Vegaprom 200х180 (ПЭ)</option>
+        <option value="docke_premium_stal">Döcke Premium Stal</option>
+        <option value="gl_optima_matt">Grand Line Optima MATT</option>
+        <option value="gl_optima_150x100">Grand Line Optima 150х100</option>
+        <option value="gl_optima_125x90">Grand Line Optima 125х90</option>
+        <option value="gl_granite_150x100">Grand Line Granite 150х100</option>
+        <option value="gl_granite_125x90">Grand Line Granite 125х90</option>
+      </select>
+    </div>
+
+    <div id="g_plastic_brand_wrap" class="hidden">
+      <label for="g_plastic_brand">Производитель</label>
+      <select id="g_plastic_brand">
+        <option value="docke_lux" selected>Döcke Lux</option>
+        <option value="docke_premium">Döcke Premium</option>
+        <option value="docke_standart">Döcke Standart</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <label for="g_roof_mounted">Смонтирована ли кровля</label>
+      <select id="g_roof_mounted">
+        <option value="yes">Да</option>
+        <option value="no" selected>Нет</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="g_height">Высота от земли до карниза (м)</label>
+      <input id="g_height" type="number" value="3" min="0" step="0.1">
+    </div>
+
+    <div>
+      <label for="g_length">Длина по карнизу (м)</label>
+      <input id="g_length" type="number" value="8" min="0" step="0.1">
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <label for="g_overhang">Длина карнизного свеса (м)</label>
+      <input id="g_overhang" type="number" value="0.5" min="0" step="0.1">
+      <div class="hint"></div>
+    </div>
+
+    <div style="grid-column: span 2;">
+      <label>Тип крыши</label>
+      <input id="g_roof_type" type="hidden" value="single">
+
+      <div class="roof-picks" id="g_roof_picks">
+        <button type="button" class="roof-btn active" data-value="single">
+          <img src="односкатная.webp" alt="Односкатная">
+          <span>Односкатная</span>
+        </button>
+        <button type="button" class="roof-btn" data-value="double">
+          <img src="двускатная.webp" alt="Двускатная">
+          <span>Двускатная</span>
+        </button>
+        <button type="button" class="roof-btn" data-value="hip">
+          <img src="вальмовая.webp" alt="Вальмовая">
+          <span>Вальмовая</span>
+        </button>
+        <button type="button" class="roof-btn" data-value="tent">
+          <img src="шатровая.webp" alt="Шатровая">
+          <span>Шатровая</span>
+        </button>
+        <button type="button" class="roof-btn" data-value="mansard">
+          <img src="мансардная.webp" alt="Мансардная">
+          <span>Мансардная</span>
+        </button>
+        <button type="button" class="roof-btn" data-value="other">
+          <img src="другая.jpg" alt="Другая">
+          <span>Другая</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="g_other_wrap" class="calc-block hidden">
+    <h3>Дополнительные параметры для “Другая”</h3>
+
+    <div class="grid">
+      <div id="g_valleys_wrap">
+        <label for="g_valleys">Количество ендов</label>
+        <input id="g_valleys" type="number" value="0" min="0" step="1">
+      </div>
+
+      <div>
+        <label for="g_contour">Карниз имеет замкнутый контур</label>
+        <select id="g_contour">
+          <option value="yes" selected>Да</option>
+          <option value="no">Нет</option>
+        </select>
+      </div>
+
+      <div id="g_open_wrap" class="hidden">
+        <label for="g_open_ends">Сколько открытых концов желоба?</label>
+        <input id="g_open_ends" type="number" value="0" min="0" step="1">
+      </div>
+
+      <div></div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label for="g_ext_angles">Количество внешних углов 90°</label>
+        <input id="g_ext_angles" type="number" value="0" min="0" step="1">
+      </div>
+
+      <div>
+        <label for="g_int_angles">Количество внутренних углов 90°</label>
+        <input id="g_int_angles" type="number" value="0" min="0" step="1">
+      </div>
+
+      <div></div>
+    </div>
+  </div>
+
+  <button id="g_calcBtn" type="button">Рассчитать</button>
+
+  <div class="out" style="margin-top:12px;">
+    <div id="g_tableWrap"></div>
+    <div class="err" id="g_err"></div>
+  </div>
+</section>
+
+
+<!-- КАЛЬКУЛЯТОР СОФИТОВ -->
+<section class="card calc-item" data-calc="soffit" style="margin-top:16px;">
+  <h2>Калькулятор софитов</h2>
+
+  <div class="grid">
+    <div>
+      <label for="s_material">Материал</label>
+      <select id="s_material">
+        <option value="">— выберите —</option>
+        <option value="c8">Профнастил С8</option>
+        <option value="evrobrus">Евробрус</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="s_overhang">Длина карнизного свеса (м)</label>
+      <input id="s_overhang" type="number" min="0" step="0.01" value="0">
+    </div>
+
+    <div>
+      <label for="s_length">Длина по карнизу (м)</label>
+      <input id="s_length" type="number" min="0" step="0.01" value="0">
+    </div>
+  </div>
+
+  
+  <div class="trims-block" style="margin-top:10px;">
+    <div class="trims-title">Доборные элементы:</div>
+    <div class="trims-list">
+      <label class="trims-item"><input type="checkbox" id="s_trim_p"><span>П‑планка завершающая</span></label>
+      <label class="trims-item"><input type="checkbox" id="s_trim_j"><span>J‑планка</span></label>
+      <label class="trims-item"><input type="checkbox" id="s_trim_facia"><span>Лобовая планка</span></label>
+      <label class="trims-item"><input type="checkbox" id="s_trim_corner"><span>Планка угла внешнего сложная</span></label>
+    </div>
+  </div>
+
+  <div class="actions">
+
+    <button id="s_calc" type="button">Рассчитать</button>
+    <button id="s_pdf" type="button" class="hidden">Скачать PDF</button>
+  </div>
+
+  <div class="out" style="margin-top:12px;">
+    <div id="s_result"></div>
+    <div class="err" id="s_err"></div>
+  </div>
+</section>
+
+
+
+<!-- ОСНОВНОЙ КАЛЬКУЛЯТОР ПРОДУКЦИИ -->
+<section class="card calc-item hidden" data-calc="main-product" style="margin-top:16px;">
+  <h2>Калькулятор основного продукта</h2>
+
+  <div class="grid">
+    <div>
+      <label for="mp_type">Тип расчёта</label>
+      <select id="mp_type">
+        <option value="">— выберите —</option>
+        <option value="roof">Кровля</option>
+        <option value="fence">Забор</option>
+        <option value="facade">Фасад</option>
+      </select>
+    </div>
+    <div></div>
+  </div>
+
+  <!-- КРОВЛЯ -->
+  <div id="mp_roof" class="mp-block hidden">
+    <h3>Кровля</h3>
+    <div class="grid">
+      <div>
+        <label for="r_ridge">Длина по коньку (м)</label>
+        <input id="r_ridge" type="number" min="0" step="0.01" value="0">
+      </div>
+      <div>
+        <label for="r_slopeLen">Длина ската (м)</label>
+        <input id="r_slopeLen" type="number" min="0" step="0.01" value="0">
+      </div>
+      <div>
+        <label for="r_slopes">Количество скатов</label>
+        <select id="r_slopes">
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </div>
+      <div>
+        <label for="r_material">Материал</label>
+        <select id="r_material">
+          <option value="">— выберите —</option>
+          <option value="profnastil">Профнастил</option>
+          <option value="tile">Металлочерепица</option>
+</select>
+      </div>
+      <div id="r_profile_wrap" class="hidden">
+        <label for="r_profile">Профиль</label>
+        <select id="r_profile"></select>
+      </div>
+      <div>
+        <label for="r_price">Стоимость (₽/м²)</label>
+        <input id="r_price" type="number" min="0" step="1" value="0">
+      </div>
+    </div>
+
+    <button id="r_addTrims" type="button">Добавить доборные элементы</button>
+    <div id="r_trims" class="mp-subblock hidden">
+      <div class="grid">
+        <div>
+          <label for="r_trimLen">Длина доборных элементов</label>
+          <select id="r_trimLen">
+            <option value="2">2 м</option>
+            <option value="3">3 м</option>
+          </select>
+        </div>
+        <div></div>
+      </div>
+      <div class="hint">В расчёте используется эффективная длина (длина - 0,1 м).</div>
+    </div>
+
+    <div class="actions">
+      <button id="r_calc" type="button">Рассчитать</button>
+      <button id="r_split" type="button" class="hidden">Разделить скат</button>
+      <button id="r_pdf" type="button" class="hidden">Скачать PDF</button>
+    </div>
+
+    <div class="out" style="margin-top:12px;">
+      <div id="r_result"></div>
+      <div class="err" id="r_err"></div>
+    </div>
+  </div>
+
+  <!-- ЗАБОР -->
+  <div id="mp_fence" class="mp-block hidden">
+    <h3>Забор</h3>
+    <div class="grid">
+      <div id="f_len_wrap">
+        <label for="f_length">Длина забора (м)</label>
+        <input id="f_length" type="number" min="0" step="0.01" value="0">
+      </div>
+      <div class="hidden" id="f_area_wrap">
+        <label for="f_area">Площадь участка (сот)</label>
+        <input id="f_area" type="number" min="0" step="0.01" value="0">
+      </div>
+      <div>
+        <label for="f_height">Высота забора (м)</label>
+        <input id="f_height" type="number" min="0" step="0.01" value="0">
+      </div>
+      <div>
+        <label for="f_material">Материал</label>
+        <select id="f_material">
+          <option value="">— выберите —</option>
+          <option value="profnastil">Профнастил</option>
+          <option value="shtaketnik">Штакетник</option>
+        </select>
+      </div>
+      <div id="f_profile_wrap" class="hidden">
+        <label for="f_profile">Профиль</label>
+        <select id="f_profile"></select>
+      </div>
+      <div id="f_price_m2_wrap" class="hidden">
+        <label for="f_price_m2">Стоимость (₽/м²)</label>
+        <input id="f_price_m2" type="number" min="0" step="1" value="0">
+      </div>
+      <div id="f_gap_wrap" class="hidden">
+        <label for="f_gap">Зазор (м)</label>
+        <input id="f_gap" type="number" min="0" step="0.001" value="0">
+      </div>
+      <div id="f_price_lm_wrap" class="hidden">
+        <label for="f_price_lm">Стоимость (₽/пог.м)</label>
+        <input id="f_price_lm" type="number" min="0" step="1" value="0">
+      </div>
+    </div>
+
+    <div class="mp-fence-checks">
+        <label class="check"><input type="checkbox" id="f_useArea"><span>Нет длины забора, есть площадь участка</span></label>
+        <label class="check"><input type="checkbox" id="f_pipes"><span>Посчитать профтрубы</span></label>
+      </div>
+
+    <div id="f_pipes_block" class="mp-subblock hidden">
+      <div class="grid">
+        <div>
+          <label for="f_depth">Величина заглубления (м)</label>
+          <select id="f_depth">
+            <option value="0.5">0,5</option>
+            <option value="0.6">0,6</option>
+            <option value="0.7">0,7</option>
+            <option value="0.8">0,8</option>
+            <option value="0.9">0,9</option>
+            <option value="1.0">1,0</option>
+          </select>
+        </div>
+        <div>
+          <label for="f_step">Шаг столбов (м)</label>
+          <select id="f_step">
+            <option value="1.0">1,0</option>
+            <option value="1.5">1,5</option>
+            <option value="2.0">2,0</option>
+            <option value="2.5">2,5</option>
+            <option value="3.0">3,0</option>
+          </select>
+        </div>
+        <div>
+          <label for="f_lags">Количество лаг</label>
+          <select id="f_lags">
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+        <div>
+          <label for="f_pipeSize">Размер трубы на столб</label>
+          <select id="f_pipeSize">
+            <option value="60x60">60×60</option>
+            <option value="80x80">80×80</option>
+            <option value="100x100">100×100</option>
+          </select>
+        </div>
+      </div>
+      <div class="checks" style="margin-top:8px;">
+        <label class="check"><input type="checkbox" id="f_caps"> Добавить заглушки на столбы</label>
+        <label class="check"><input type="checkbox" id="f_screws"> Добавить саморезы</label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="f_calc" type="button">Рассчитать</button>
+      <button id="f_pdf" type="button" class="hidden">Скачать PDF</button>
+    </div>
+
+    <div class="out" style="margin-top:12px;">
+      <div id="f_result"></div>
+      <div class="err" id="f_err"></div>
+    </div>
+  </div>
+
+  <!-- ФАСАД -->
+  <div id="mp_facade" class="mp-block hidden">
+    <h3>Фасад</h3>
+
+    <div id="fa_walls"></div>
+
+    <div class="actions">
+      <button id="fa_addWall" type="button">Добавить стену</button>
+    </div>
+
+    <div class="actions" style="margin-top:12px;">
+      <button id="fa_calc" type="button">Рассчитать</button>
+      <button id="fa_pdf" type="button" class="hidden">Скачать PDF</button>
+    </div>
+
+    <div class="out" style="margin-top:12px;">
+      <div id="fa_result"></div>
+      <div class="err" id="fa_err"></div>
+    </div>
+  </div>
+
+</section>
+
+<script src="main.js"></script>
+
+</body>
+</html>
