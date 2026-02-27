@@ -57,6 +57,7 @@ input, select{
   color: #000000;
   font-family: Montserrat, sans-serif;
   box-sizing: border-box;
+  background: transparent;
 }
 
 /* Поле “Зазор” — чуть короче (по желанию) */

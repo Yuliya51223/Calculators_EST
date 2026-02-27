@@ -58,35 +58,35 @@
 
   <div class="grid">
     <div>
-      <label for="a_span">Ширина пролёта (мм)</label>
-      <input id="a_span" type="number" value="0" min="1" step="1">
+      <label for="a_span">Ширина пролёта (м)</label>
+      <input id="a_span" type="number" value="0" min="0" step="0.01">
     </div>
 
     <div>
-      <label for="a_edge_h">Высота у стоек (мм)</label>
-      <input id="a_edge_h" type="number" value="0" min="1" step="1">
+      <label for="a_edge_h">Высота у стоек (м)</label>
+      <input id="a_edge_h" type="number" value="0" min="0" step="0.01">
     </div>
 
     <div>
-      <label for="a_center_h">Высота по центру (мм)</label>
-      <input id="a_center_h" type="number" value="0" min="1" step="1">
+      <label for="a_center_h">Высота по центру (м)</label>
+      <input id="a_center_h" type="number" value="0" min="0" step="0.01">
     </div>
   </div>
 
   <div class="grid">
     <div>
-  <label for="a_plank_w">Ширина планки (мм)</label>
+  <label for="a_plank_w">Ширина планки (м)</label>
   <select id="a_plank_w">
     <option value="">— выберите —</option>
-    <option value="126">126</option>
-    <option value="118">118</option>
+    <option value="0.126">0,126</option>
+    <option value="0.118">0,118</option>
   </select>
 </div>
 
 
     <div>
-      <label for="a_gap">Зазор между планками (мм)</label>
-      <input id="a_gap" type="number" value="0" min="0" step="1">
+      <label for="a_gap">Зазор между планками (см)</label>
+      <input id="a_gap" type="number" value="0" min="0" step="0.1">
     </div>
 
     <div>
@@ -105,8 +105,8 @@
 
   <div class="out">
     <div class="row"><span>Количество планок (шт)</span><strong id="a_qty">—</strong></div>
-    <div class="row"><span>Мин. высота (мм)</span><strong id="a_min">—</strong></div>
-    <div class="row"><span>Макс. высота (мм)</span><strong id="a_max">—</strong></div>
+    <div class="row"><span>Мин. высота (м)</span><strong id="a_min">—</strong></div>
+    <div class="row"><span>Макс. высота (м)</span><strong id="a_max">—</strong></div>
     <div class="err" id="a_err"></div>
 
     <div id="a_tableWrap" style="margin-top:12px;"></div>
@@ -147,17 +147,27 @@
     <div id="g_metal_brand_wrap">
       <label for="g_metal_brand">Производитель</label>
       <select id="g_metal_brand">
-        <option value="nika" selected>NIKA (прямоугольный)</option>
-        <option value="gl_optima">Grand Line Optima (полукруглый)</option>
+        <option value="vegaprom_185x140_zn" selected>Vegaprom 185х140 (цинк)</option>
+        <option value="vegaprom_185x140_pe">Vegaprom 185х140 (ПЭ)</option>
+        <option value="vegaprom_185x150_zn">Vegaprom 185х150 (цинк)</option>
+        <option value="vegaprom_185x150_pe">Vegaprom 185х150 (ПЭ)</option>
+        <option value="vegaprom_200x180_zn">Vegaprom 200х180 (цинк)</option>
+        <option value="vegaprom_200x180_pe">Vegaprom 200х180 (ПЭ)</option>
+        <option value="docke_premium_stal">Döcke Premium Stal</option>
+        <option value="gl_optima_matt">Grand Line Optima MATT</option>
+        <option value="gl_optima_150x100">Grand Line Optima 150х100</option>
+        <option value="gl_optima_125x90">Grand Line Optima 125х90</option>
+        <option value="gl_granite_150x100">Grand Line Granite 150х100</option>
+        <option value="gl_granite_125x90">Grand Line Granite 125х90</option>
       </select>
     </div>
 
     <div id="g_plastic_brand_wrap" class="hidden">
       <label for="g_plastic_brand">Производитель</label>
       <select id="g_plastic_brand">
-        <option value="docke_premium" selected>Docke Premium</option>
-        <option value="docke_lux">Docke Lux</option>
-        <option value="bryza">BRYZA</option>
+        <option value="docke_lux" selected>Döcke Lux</option>
+        <option value="docke_premium">Döcke Premium</option>
+        <option value="docke_standart">Döcke Standart</option>
       </select>
     </div>
   </div>
@@ -226,6 +236,11 @@
     <h3>Дополнительные параметры для “Другая”</h3>
 
     <div class="grid">
+      <div id="g_valleys_wrap">
+        <label for="g_valleys">Количество ендов</label>
+        <input id="g_valleys" type="number" value="0" min="0" step="1">
+      </div>
+
       <div>
         <label for="g_contour">Карниз имеет замкнутый контур</label>
         <select id="g_contour">
@@ -430,8 +445,8 @@
         <input id="f_price_m2" type="number" min="0" step="1" value="0">
       </div>
       <div id="f_gap_wrap" class="hidden">
-        <label for="f_gap">Зазор (см)</label>
-        <input id="f_gap" type="number" min="0" step="0.1" value="0">
+        <label for="f_gap">Зазор (м)</label>
+        <input id="f_gap" type="number" min="0" step="0.001" value="0">
       </div>
       <div id="f_price_lm_wrap" class="hidden">
         <label for="f_price_lm">Стоимость (₽/пог.м)</label>
