@@ -2280,7 +2280,8 @@ function downloadSoffitPdf(){
  }
  rPdfBtn?.addEventListener('click', downloadRoofPdf);
 
-	// ===================== ЗАБОР =====================
+ {
+ // ===================== ЗАБОР =====================
  const fLenWrap = document.getElementById('f_len_wrap');
  const fAreaWrap = document.getElementById('f_area_wrap');
  const fLength = document.getElementById('f_length');
@@ -2304,10 +2305,10 @@ function downloadSoffitPdf(){
  const fPipeSize = document.getElementById('f_pipeSize');
  const fCaps = document.getElementById('f_caps');
  const fScrews = document.getElementById('f_screws');
-	const fenceCalcBtn = document.getElementById('f_calc');
-	const fencePdfBtn = document.getElementById('f_pdf');
-	const fenceResult = document.getElementById('f_result');
-	const fenceErr = document.getElementById('f_err');
+ const fCalcBtn = document.getElementById('f_calc');
+ const fPdfBtn = document.getElementById('f_pdf');
+ const fResult = document.getElementById('f_result');
+ const fErr = document.getElementById('f_err');
 
  let fenceLast = null;
 
@@ -2322,7 +2323,7 @@ function downloadSoffitPdf(){
   fGapWrap?.classList.toggle('hidden', !isSht);
   fPriceLmWrap?.classList.toggle('hidden', !isSht);
  }
-	fMaterial?.addEventListener('change', () => { fenceRenderFields(); fenceErr.textContent=''; fenceResult.innerHTML=''; fencePdfBtn.classList.add('hidden'); });
+ fMaterial?.addEventListener('change', () => { fenceRenderFields(); fErr.textContent=''; fResult.innerHTML=''; fPdfBtn.classList.add('hidden'); });
  fenceRenderFields();
 
  function fenceToggleLengthMode(){
@@ -2428,23 +2429,23 @@ function downloadSoffitPdf(){
    `);
   }
 
-	fenceResult.innerHTML = lines.join('<br>');
+  fResult.innerHTML = lines.join('<br>');
  }
 
  function fenceCalc(){
-	fenceErr.textContent='';
+  fErr.textContent='';
   const data = fenceCompute();
-	if (data.err){ fenceErr.textContent=data.err; return; }
+  if (data.err){ fErr.textContent=data.err; return; }
   fenceLast = data;
   fenceRender(data);
-	fencePdfBtn?.classList.remove('hidden');
+  fPdfBtn?.classList.remove('hidden');
  }
-	fenceCalcBtn?.addEventListener('click', fenceCalc);
+ fCalcBtn?.addEventListener('click', fenceCalc);
 
  function downloadFencePdf(){
   if (!fenceLast) return;
   const doc = pdfDoc();
-	if (!doc){ fenceErr.textContent='PDF не может быть создан: jsPDF не загружен'; return; }
+  if (!doc){ fErr.textContent='PDF не может быть создан: jsPDF не загружен'; return; }
   pdfSetFont(doc);
   doc.setFontSize(14);
   doc.text('Расчёт забора', 14, 14);
@@ -2512,7 +2513,8 @@ function downloadSoffitPdf(){
 
   doc.save('raschet-zabora.pdf');
  }
-	fencePdfBtn?.addEventListener('click', downloadFencePdf);
+ fPdfBtn?.addEventListener('click', downloadFencePdf);
+ }
 
  // ===================== ФАСАД =====================
  const faWalls = document.getElementById('fa_walls');
@@ -2856,6 +2858,5 @@ function downloadSoffitPdf(){
 
  sCalcBtn?.addEventListener('click', sCalc);
  sPdfBtn?.addEventListener('click', downloadSoffitPdf);
-	
-	
+
 
