@@ -2129,7 +2129,7 @@ function downloadSoffitPdf(){
   const sheets = sheetsPerSlope * slopes;
   const area = ridge * slope * slopes;
   const tw = totalWidthM(prof);
-  // стоимость: кол-во листов * общая ширина * длина листа * цена (₽/м²)
+  // стоимость: кол-во листов * общая ширина * длина листа * цена (₸/м²)
   const sum = (price>0 && tw>0) ? (sheets * tw * slope * price) : null;
 
   // доборы
@@ -2179,7 +2179,7 @@ function downloadSoffitPdf(){
   }
 
   lines.push(`<div class="mp-summary"><b>Площадь:</b> ${fmt(data.area)} м²</div>`);
-  if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₽</div>`);
+  if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₸</div>`);
 
   if (data.trims){
    const rows = data.trims.items.map(it => `<tr><td>${it.name}</td><td>${fmtInt(it.qty)} шт</td><td>${fmt(it.len,0)} м</td></tr>`).join('');
@@ -2249,7 +2249,7 @@ function downloadSoffitPdf(){
   add('Длина ската', `${fmt(roofLast.slope)} м`);
   add('Количество скатов', `${roofLast.slopes}`);
   add('Материал', roofLast.mat==='profnastil' ? 'Профнастил' : (roofLast.mat==='tile' ? 'Металлочерепица' : 'Фальц'));
-  if (roofLast.sum!==null) add('Цена', `${fmt(n(document.getElementById('r_price')?.value),0)} ₽/м²`);
+  if (roofLast.sum!==null) add('Цена', `${fmt(n(document.getElementById('r_price')?.value),0)} ₸/м²`);
   if (!roofSplit){
    add('Количество листов', `${fmtInt(roofLast.sheets)} шт`);
   } else {
@@ -2257,7 +2257,7 @@ function downloadSoffitPdf(){
    add('Количество листов (низ)', `${fmtInt(roofLast.sheets)} шт`);
   }
   add('Площадь', `${fmt(roofLast.area)} м²`);
-  if (roofLast.sum!==null) add('Стоимость', `${fmt(roofLast.sum,0)} ₽`);
+  if (roofLast.sum!==null) add('Стоимость', `${fmt(roofLast.sum,0)} ₸`);
 
   if (roofSplit){
    const half = roofLast.slope/2;
@@ -2383,7 +2383,8 @@ function downloadSoffitPdf(){
    const pipeSize = fPipeSize?.value || '';
    const posts = ceil(length/step) + 1;
    const postMeters = posts * (height + depth);
-   const postPcs6 = ceil(postMeters / 6);
+   // +1 к текущей формуле (по требованию): профтруба 6м на столбы
+   const postPcs6 = ceil(postMeters / 6) + 1;
    const lagMeters = length * lags;
    const lagPcs6 = ceil(lagMeters / 6);
    const caps = fCaps?.checked ? posts : 0;
@@ -2408,7 +2409,7 @@ function downloadSoffitPdf(){
   lines.push(`<div class="mp-summary"><b>Профиль:</b> ${displayName(data.prof)}</div>`);
   lines.push(`<div class="mp-summary"><b>Количество листов/планок:</b> ${fmtInt(data.sheets)} шт</div>`);
   lines.push(`<div class="mp-summary"><b>Длина элементов:</b> ${fmt(data.height)} м</div>`);
-  if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₽</div>`);
+  if (data.sum!==null) lines.push(`<div class="mp-summary"><b>Стоимость:</b> ${fmt(data.sum,0)} ₸</div>`);
 
   if (data.pipes){
    const p=data.pipes;
@@ -2464,19 +2465,19 @@ function downloadSoffitPdf(){
    const tw = totalWidthM(fenceLast.prof);
    if (ww>0) add('Рабочая ширина листа', `${fmt(ww,3)} м`);
    if (tw>0) add('Общая ширина листа', `${fmt(tw,3)} м`);
-   if (fenceLast.unitCost?.price>0) add('Стоимость', `${fmt(fenceLast.unitCost.price,0)} ₽/м²`);
+   if (fenceLast.unitCost?.price>0) add('Стоимость', `${fmt(fenceLast.unitCost.price,0)} ₸/м²`);
   } else {
    const plankW = (WIDTH_WORK_MM[fenceLast.prof]||0)/1000;
    const gapM = n(document.getElementById('f_gap')?.value); // текущее значение в форме
    if (plankW>0) add('Ширина планки', `${fmt(plankW,3)} м`);
    if (gapM>0) add('Зазор', `${fmt(gapM,3)} м`);
-   if (fenceLast.unitCost?.price>0) add('Стоимость', `${fmt(fenceLast.unitCost.price,0)} ₽/пог.м`);
+   if (fenceLast.unitCost?.price>0) add('Стоимость', `${fmt(fenceLast.unitCost.price,0)} ₸/пог.м`);
   }
 
   y += 2;
   add('Кол-во листов/планок', `${fmtInt(fenceLast.sheets)} шт`);
   add('Длина листа/планки', `${fmt(fenceLast.height)} м`);
-  if (fenceLast.sum!==null) add('Итого стоимость', `${fmt(fenceLast.sum,0)} ₽`);
+  if (fenceLast.sum!==null) add('Итого стоимость', `${fmt(fenceLast.sum,0)} ₸`);
 
   // Проф трубы (если выбрано)
   if (fenceLast.pipes){
@@ -2544,7 +2545,7 @@ function downloadSoffitPdf(){
      <input type="number" class="fa_l" min="0.4" max="6" step="0.01" value="0.4">
     </div>
     <div>
-     <label>Стоимость (₽/м²)</label>
+     <label>Стоимость (₸/м²)</label>
      <input type="number" class="fa_price" min="0" step="1" value="0">
     </div>
     <div>
@@ -2731,7 +2732,7 @@ function downloadSoffitPdf(){
      <div class="mp-summary">Кол-во листов: ${fmtInt(w.sheets)} шт</div>
      <div class="mp-summary">Длина листов: ${fmt(w.sheetLen)} м</div>
      <div class="mp-summary">Площадь: ${fmt(w.area)} м²</div>
-     ${w.sum?`<div class="mp-summary">Стоимость: ${fmt(w.sum,0)} ₽</div>`:''}
+     ${w.sum?`<div class="mp-summary">Стоимость: ${fmt(w.sum,0)} ₸</div>`:''}
      ${w.trims?(
       `<div style="margin-top:10px;"><b>Доборные элементы</b></div>
        <table class="mp-table"><thead><tr><th>Элемент</th><th>Кол-во</th><th>Длина</th></tr></thead><tbody>${rows}</tbody></table>`
@@ -2740,7 +2741,7 @@ function downloadSoffitPdf(){
    `);
   });
 
-  blocks.push(`<div class="mp-total"><b>Итого площадь:</b> ${fmt(data.totalArea)} м² ${data.totalSum?`&nbsp;&nbsp; <b>Итого стоимость:</b> ${fmt(data.totalSum,0)} ₽`:''}</div>`);
+  blocks.push(`<div class="mp-total"><b>Итого площадь:</b> ${fmt(data.totalArea)} м² ${data.totalSum?`&nbsp;&nbsp; <b>Итого стоимость:</b> ${fmt(data.totalSum,0)} ₸`:''}</div>`);
   faResult.innerHTML = blocks.join('<br>');
  }
 
@@ -2766,7 +2767,7 @@ function downloadSoffitPdf(){
 
   // Итоги
   doc.text(`Итого площадь: ${fmt(facadeLast.totalArea)} м²`, 14, y); y+=7;
-  doc.text(`Итого стоимость: ${fmt(facadeLast.totalSum||0,0)} ₽`, 14, y); y+=9;
+  doc.text(`Итого стоимость: ${fmt(facadeLast.totalSum||0,0)} ₸`, 14, y); y+=9;
 
   // Вводные данные по стенам
   if (doc.autoTable){
@@ -2791,7 +2792,7 @@ function downloadSoffitPdf(){
 
    doc.autoTable({
     startY: y,
-    head: [['Стена','Материал','Профиль','Раскладка','Высота, м','Длина, м','Цена','Листов, шт','Длина листа, м','Площадь, м²','Сумма, ₽']],
+    head: [['Стена','Материал','Профиль','Раскладка','Высота, м','Длина, м','Цена','Листов, шт','Длина листа, м','Площадь, м²','Сумма, ₸']],
     body,
     theme: 'grid',
     styles: {font: (doc.getFont().fontName || 'helvetica'), fontSize: 8, cellPadding: 2},
