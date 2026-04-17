@@ -2391,8 +2391,8 @@ function downloadSoffitPdf(){
 
    let screws = 0;
    if (fScrews?.checked){
-    if (mat==='profnastil') screws = 12 * sheets;
-    else screws = 4 * sheets;
+    if (mat==='profnastil') screws = 6 * lags * sheets;
+    else screws = 2 * lags * sheets;
    }
 
    pipes = {depth, step, lags, pipeSize, posts, postPcs6, lagPcs6, caps, screws};
